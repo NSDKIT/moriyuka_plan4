@@ -4,7 +4,7 @@ import { Menu, X } from "lucide-react";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   // カスタムカーソル
   useEffect(() => {
@@ -29,18 +29,12 @@ export default function Home() {
     };
   }, []);
 
-  // スクロール進捗を追跡
+  // スライダー
   useEffect(() => {
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight - windowHeight;
-      const scrolled = window.scrollY;
-      const progress = Math.min(scrolled / documentHeight, 1);
-      setScrollProgress(progress);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % 3);
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   const scrollToSection = (id: string) => {
@@ -52,14 +46,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen relative bg-gray-100">
-      {/* ハンバーガーメニュー */}
-      <div className="fixed top-6 right-6 z-50">
+    <div className="min-h-screen">
+      {/* ハンバーガーメニュー (モバイル) */}
+      <div className="fixed top-6 right-6 z-50 md:hidden">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setMenuOpen(!menuOpen)}
-          className="bg-white/80 backdrop-blur-sm shadow-lg"
+          className="bg-white/80 backdrop-blur-sm"
         >
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
@@ -67,7 +61,7 @@ export default function Home() {
 
       {/* メニューオーバーレイ */}
       {menuOpen && (
-        <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-40">
+        <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-40 md:hidden">
           <nav className="flex items-center justify-center h-full">
             <ul className="space-y-8 text-center text-2xl font-light">
               <li><button onClick={() => scrollToSection('profile')} className="hover:opacity-70 transition-opacity">01 PROFILE</button></li>
@@ -81,70 +75,84 @@ export default function Home() {
         </div>
       )}
 
-      {/* トップセクション */}
-      <div className="h-screen flex items-center justify-center px-4 bg-white">
-        <div className="text-center">
-          <h1 className="text-5xl md:text-6xl font-light tracking-widest mb-4 text-gray-800">MORI YUKA</h1>
-          <p className="text-sm md:text-base tracking-wider text-gray-600 mb-12">OFFICIAL SITE</p>
-          <div 
-            className="relative w-full max-w-md mx-auto h-96 overflow-hidden rounded-lg shadow-2xl group"
-            style={{
-              filter: `grayscale(${100 - scrollProgress * 100}%)`,
-              transition: 'filter 0.3s ease-out'
-            }}
-          >
-            <img
-              src="/center.png"
-              alt="もりゆか"
-              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-              style={{
-                filter: 'grayscale(100%)',
-              }}
+      {/* PC版トップセクション */}
+      <div className="hidden md:block relative h-screen">
+        <div className="absolute inset-0 flex items-center justify-between px-8">
+          {/* 左画像 */}
+          <div className="w-1/3 h-full flex items-center justify-center overflow-hidden">
+            <img 
+              src="/left.png" 
+              alt="もりゆか" 
+              className="h-4/5 object-contain"
             />
-            <div 
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-              style={{
-                backgroundImage: 'url(/center.png)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
+          </div>
+
+          {/* 中央スライダー */}
+          <div className="w-1/3 h-full flex flex-col items-center justify-center">
+            <div className="text-center mb-8">
+              <h1 className="text-5xl font-light tracking-widest mb-2">MORI YUKA</h1>
+              <p className="text-sm tracking-wider text-gray-600">OFFICIAL SITE</p>
+            </div>
+            <div className="relative w-full max-w-md h-96 overflow-hidden">
+              {[0, 1, 2].map((index) => (
+                <img
+                  key={index}
+                  src="/center.png"
+                  alt={`もりゆか プロフィール ${index + 1}`}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                    currentSlide === index ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* 右画像 */}
+          <div className="w-1/3 h-full flex items-center justify-center overflow-hidden">
+            <img 
+              src="/right.png" 
+              alt="もりゆか" 
+              className="h-4/5 object-contain"
             />
           </div>
         </div>
       </div>
 
+      {/* モバイル版トップセクション */}
+      <div className="md:hidden h-screen flex items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-4xl font-light tracking-widest mb-2">MORI YUKA</h1>
+          <p className="text-sm tracking-wider text-gray-600 mb-8">OFFICIAL SITE</p>
+          <div className="relative w-full max-w-sm h-96 mx-auto overflow-hidden">
+            {[0, 1, 2].map((index) => (
+              <img
+                key={index}
+                src="/center.png"
+                alt={`もりゆか プロフィール ${index + 1}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                  currentSlide === index ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* プロフィールセクション */}
-      <section id="profile" className="py-20 px-4 bg-white">
-        <div className="container max-w-3xl mx-auto">
+      <section id="profile" className="py-20 px-4 bg-white/80 backdrop-blur-sm">
+        <div className="container max-w-4xl mx-auto">
           <div className="mb-8 fade-in">
             <span className="text-sm text-gray-500 tracking-wider">01</span>
-            <h2 className="text-4xl font-light tracking-wider mt-2 text-gray-800">PROFILE</h2>
+            <h2 className="text-4xl font-light tracking-wider mt-2">PROFILE</h2>
           </div>
-          <div className="space-y-8">
-            <div 
-              className="relative overflow-hidden rounded-lg shadow-lg group"
-              style={{
-                filter: `grayscale(${Math.max(0, 100 - scrollProgress * 300)}%)`,
-                transition: 'filter 0.5s ease-out'
-              }}
-            >
-              <img 
-                src="https://iro-color.com/img/episode/about620-gray.jpg" 
-                alt="もりゆか プロフィール画像"
-                className="w-full transition-all duration-700 group-hover:scale-105"
-              />
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                style={{
-                  backgroundImage: 'url(https://iro-color.com/img/episode/about620-gray.jpg)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: 'grayscale(0%)',
-                }}
-              />
-            </div>
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            <img 
+              src="https://iro-color.com/img/episode/about620-gray.jpg" 
+              alt="もりゆか プロフィール画像"
+              className="w-full rounded-lg fade-in"
+            />
             <div className="slide-in">
-              <h3 className="text-2xl font-light mb-4 text-gray-800">もり ゆか・Mori Yuka</h3>
+              <h3 className="text-2xl font-light mb-4">もり ゆか・Mori Yuka</h3>
               <p className="text-gray-700 leading-relaxed">
                 元アイドルとして活動し、現在は役者・タレントとして映画、ドラマ、舞台で幅広く活躍中。身長158cm。看護師免許を持つ異色の経歴を持ち、医療現場で培った人への深い理解と共感力を表現活動に活かしている。特に手話表現とダンスを得意とし、言葉だけでは伝えきれない感情や想いを身体全体で表現することを大切にしている。SNSフォロワーは35,000人以上。
               </p>
@@ -154,28 +162,20 @@ export default function Home() {
       </section>
 
       {/* OICOT FUKUIセクション */}
-      <section id="oicot" className="py-20 px-4 bg-gray-50">
-        <div className="container max-w-3xl mx-auto">
+      <section id="oicot" className="py-20 px-4 bg-white/80 backdrop-blur-sm">
+        <div className="container max-w-4xl mx-auto">
           <div className="mb-8 fade-in">
             <span className="text-sm text-gray-500 tracking-wider">02</span>
-            <h2 className="text-4xl font-light tracking-wider mt-2 text-gray-800">OICOT FUKUI</h2>
+            <h2 className="text-4xl font-light tracking-wider mt-2">OICOT FUKUI</h2>
           </div>
-          <div className="space-y-8">
-            <div 
-              className="relative overflow-hidden rounded-lg shadow-lg group"
-              style={{
-                filter: `grayscale(${Math.max(0, 100 - scrollProgress * 200)}%)`,
-                transition: 'filter 0.5s ease-out'
-              }}
-            >
-              <img 
-                src="https://img.freepik.com/premium-photo/wavy-black-white-background-wallpaper-grey-smooth-lines-shiny-modern-geometric-polygon-textures_1030874-14146.jpg?semt=ais_incoming&w=740&q=80" 
-                alt="OICOT FUKUIロゴ"
-                className="w-full transition-all duration-700 group-hover:scale-105"
-              />
-            </div>
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            <img 
+              src="https://img.freepik.com/premium-photo/wavy-black-white-background-wallpaper-grey-smooth-lines-shiny-modern-geometric-polygon-textures_1030874-14146.jpg?semt=ais_incoming&w=740&q=80" 
+              alt="OICOT FUKUIロゴ"
+              className="w-full rounded-lg fade-in"
+            />
             <div className="slide-in">
-              <h3 className="text-2xl font-light mb-4 text-gray-800">地方エンタメの未来をつくる</h3>
+              <h3 className="text-2xl font-light mb-4">地方エンタメの未来をつくる</h3>
               <p className="text-sm text-gray-600 mb-4">「上京しなくても、夢は叶う」を証明するプロジェクト</p>
               <p className="text-gray-700 leading-relaxed">
                 地方在住の表現者が、地元にいながら活躍できる仕組みをつくる。<br/>
@@ -188,11 +188,11 @@ export default function Home() {
       </section>
 
       {/* SNSセクション */}
-      <section id="sns" className="py-20 px-4 bg-white">
-        <div className="container max-w-3xl mx-auto">
+      <section id="sns" className="py-20 px-4 bg-white/80 backdrop-blur-sm">
+        <div className="container max-w-4xl mx-auto">
           <div className="mb-12 fade-in">
             <span className="text-sm text-gray-500 tracking-wider">03</span>
-            <h2 className="text-4xl font-light tracking-wider mt-2 text-gray-800">SNS</h2>
+            <h2 className="text-4xl font-light tracking-wider mt-2">SNS</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             {[
@@ -208,27 +208,12 @@ export default function Home() {
                 href={sns.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-4 p-6 hover:bg-gray-50 rounded-lg transition-all fade-in group"
-                style={{ 
-                  animationDelay: `${index * 0.1}s`,
-                  filter: `grayscale(${Math.max(0, 100 - scrollProgress * 150)}%)`,
-                }}
+                className="flex flex-col items-center gap-4 p-6 hover:bg-gray-50 rounded-lg transition-colors fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="relative">
-                  <img 
-                    src={sns.icon} 
-                    alt={sns.name} 
-                    className="w-16 h-16 object-contain transition-all duration-500 group-hover:scale-110"
-                    style={{ filter: 'grayscale(100%)' }}
-                  />
-                  <img 
-                    src={sns.icon} 
-                    alt={sns.name} 
-                    className="w-16 h-16 object-contain absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  />
-                </div>
-                <p className="text-sm font-light text-gray-700">{sns.name}</p>
-                <span className="text-xl text-gray-600">↑</span>
+                <img src={sns.icon} alt={sns.name} className="w-16 h-16 object-contain" />
+                <p className="text-sm font-light">{sns.name}</p>
+                <span className="text-xl">↑</span>
               </a>
             ))}
           </div>
@@ -236,11 +221,11 @@ export default function Home() {
       </section>
 
       {/* NEWSセクション */}
-      <section id="news" className="py-20 px-4 bg-gray-50">
-        <div className="container max-w-3xl mx-auto">
+      <section id="news" className="py-20 px-4 bg-white/80 backdrop-blur-sm">
+        <div className="container max-w-4xl mx-auto">
           <div className="mb-12 fade-in">
             <span className="text-sm text-gray-500 tracking-wider">04</span>
-            <h2 className="text-4xl font-light tracking-wider mt-2 text-gray-800">NEWS</h2>
+            <h2 className="text-4xl font-light tracking-wider mt-2">NEWS</h2>
           </div>
           <div className="space-y-6">
             {[
@@ -250,11 +235,11 @@ export default function Home() {
             ].map((news, index) => (
               <div 
                 key={index} 
-                className="border-b border-gray-200 pb-4 fade-in hover:border-gray-800 transition-colors"
+                className="border-b border-gray-200 pb-4 fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <p className="text-sm text-gray-500 mb-2">{news.date}</p>
-                <p className="text-lg font-light text-gray-800">{news.title}</p>
+                <p className="text-lg font-light">{news.title}</p>
               </div>
             ))}
           </div>
@@ -262,13 +247,13 @@ export default function Home() {
       </section>
 
       {/* WORKSセクション */}
-      <section id="works" className="py-20 px-4 bg-white">
-        <div className="container max-w-3xl mx-auto">
+      <section id="works" className="py-20 px-4 bg-white/80 backdrop-blur-sm">
+        <div className="container max-w-4xl mx-auto">
           <div className="mb-12 fade-in">
             <span className="text-sm text-gray-500 tracking-wider">05</span>
-            <h2 className="text-4xl font-light tracking-wider mt-2 text-gray-800">WORKS</h2>
+            <h2 className="text-4xl font-light tracking-wider mt-2">WORKS</h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               { category: 'MOVIE', title: '映画作品一覧' },
               { category: 'DRAMA', title: 'ドラマ作品一覧' },
@@ -278,11 +263,11 @@ export default function Home() {
             ].map((work, index) => (
               <div 
                 key={index}
-                className="border border-gray-200 p-6 rounded-lg hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all cursor-pointer fade-in group"
+                className="border border-gray-200 p-6 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <p className="text-xs text-gray-500 group-hover:text-gray-300 mb-2 transition-colors">{work.category}</p>
-                <p className="font-light text-gray-800 group-hover:text-white transition-colors">{work.title}</p>
+                <p className="text-xs text-gray-500 mb-2">{work.category}</p>
+                <p className="font-light">{work.title}</p>
               </div>
             ))}
           </div>
@@ -290,11 +275,11 @@ export default function Home() {
       </section>
 
       {/* CONTACTセクション */}
-      <section id="contact" className="py-20 px-4 bg-gray-50">
-        <div className="container max-w-3xl mx-auto text-center">
+      <section id="contact" className="py-20 px-4 bg-white/80 backdrop-blur-sm">
+        <div className="container max-w-4xl mx-auto text-center">
           <div className="mb-12 fade-in">
             <span className="text-sm text-gray-500 tracking-wider">06</span>
-            <h2 className="text-4xl font-light tracking-wider mt-2 text-gray-800">CONTACT</h2>
+            <h2 className="text-4xl font-light tracking-wider mt-2">CONTACT</h2>
           </div>
           <div className="fade-in">
             <p className="text-gray-700 mb-8 leading-relaxed">
@@ -303,7 +288,7 @@ export default function Home() {
             </p>
             <a 
               href="mailto:contact@moriyuka.com" 
-              className="inline-block text-lg font-light border-b-2 border-gray-800 hover:text-gray-600 hover:border-gray-600 transition-all"
+              className="inline-block text-lg font-light border-b-2 border-gray-800 hover:opacity-70 transition-opacity"
             >
               contact@moriyuka.com
             </a>
@@ -312,7 +297,7 @@ export default function Home() {
       </section>
 
       {/* フッター */}
-      <footer className="py-8 px-4 bg-white text-center">
+      <footer className="py-8 px-4 bg-white/80 backdrop-blur-sm text-center">
         <p className="text-sm text-gray-500">© 2024 MORI YUKA. All Rights Reserved.</p>
       </footer>
     </div>
